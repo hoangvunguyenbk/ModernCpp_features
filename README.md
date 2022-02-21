@@ -1,58 +1,98 @@
 # ModernCpp_features
 
-C++11 language feature:
+Notes on major language and library features of the new standards  C++
 
-Up till C++11 the programmer needed to mention the data type of the variable being used in the code but now we can use the keyword decltype and auto the type will be idetified by the compiler itself. This property is called **type inference**
+[C++20](#C++20)
 
-**auto**
+A. Language Feature
 
-*  Deduce type of variable by compiler acording to the type of their initializer.
-  Together with **decltype**, **auto** is usefull primarily when writing code in template libraries.
-  
-* The auto keyword is a simple way to declare a variable that has a complicated type, handy when working with template and interator
-  
-  ```c++
-  vector<int> v;
-  auto iter = v.iterator(); // instead of vector<int>::iterator itr
-  ```
-    Return value of add function will be deduce from type of passed argument t and v.
-    
-**decltype**
+- [Concept](#concept)
+- [Modules](#modules)
 
-* Act like and extractor, let you extract the type of passed variable/expression.
+B. Library Feature
 
+
+[C++17](#C++17)
+A. Language Feature
+
+- [constexpr if](#constexpr_if)
+- [structured bindings](#structured_bindings)
+
+B. Library Feature
+- [std::variant](#std::variant)
+- [std::optional](#std::optional)
+- [std::any](#std::any)
+
+---
+
+### Concept
+**Definitions** 
+
+Concept is set of conditions or constrains can be evaluated at compile-time to validate the template arguments.
+
+Example:
 ```cpp
-int x;
-int func();
-decltype(x) y; // equal int y;
-decltype(func()) z; // equal int z;
-```
+class Foo {
+public:
+	Foo(const int& x) {
+		m_int = x;
+	}
 
-* Using auto and decltype together:
+	int getInt() const {
+		return m_int;
+	}
 
-Without auto and decltype, need to call explictly when instanciate function: 
-```cpp
-template <typename T, typename U>
-U add(T t, T v) {
-	return t + v;
+private:
+	int m_int = 0;
+};
+
+//Define a concept
+template<typename T>
+concept Printable = requires (std::ostream & os,  const T& obj) 
+{
+	std::is_class_v<T>;
+	os << obj.getInt();
+};
+
+//Use concept as a parameter of funtion template
+template<Printable T>
+T print(const T& obj)
+{
+	std::cout << obj.getInt();
+	return obj;
 }
-add<int, int>(1, 3)
 ```
+**Advantages**
 
-With auto and decltype: 
+- Requirements for templates are part of the interface, easy to understand and use interface effecition.
+- Clearer error message
+- Can used predefined or custom concept
+- The overloading of functions or specialisation of class templates can be based on concepts.
+
+****
+
+Exp: Sortable concept
 ```cpp
-template <typename T, typename U>
-auto add(T t, U u) -> decltype(t + u) {
-  return t+u;
-}
+// requires clause
+template<typename Cont>
+requires Sortable<Cont>
+void sort(Cont& container);
 
-add(1, 3); //=4 return int 
-add(1, 3.0); //=4.0 return double
-add(1.0, 3.0); //=4.0 return double
+// trailing requires clause
+template<typename Cont>
+void sort(Cont& container) requires Sortable<Cont>;
+
+//Constrained template parameters
+template<Sortable cont>
+void sort(Cont& container)
 ```
-Return type of function is deduced from the passed arguments.
 
+### Modules
+**Definitions** 
 
+A module is a set of source code files that are compiled independently of the translation units that import them
+```cpp
+import std.core;
+import std.regex;
 
-
-
+```
